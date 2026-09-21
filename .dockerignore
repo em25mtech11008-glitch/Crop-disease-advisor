@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+.eggs
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Node (frontend node_modules — rebuilt inside Docker)
+frontend/node_modules/
+frontend/dist/
+
+# Dev tools
+.env
+.env.*
+!.env.example
+
+# Notebooks / reports
+*.ipynb
+archive/
+data/raw/
+
+# Infra / scripts not needed at runtime
+infra/
+scripts/
+
+# Tests
+tests/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

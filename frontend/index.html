@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crop Disease Advisor — AI-Powered Plant Health Diagnostics</title>
+  <meta name="description"
+    content="Upload a leaf photo and get instant AI-powered disease diagnosis, severity assessment, and personalized treatment plans for your crops." />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌾</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- NAVBAR                                                 -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <nav id="navbar" class="navbar">
+    <div class="navbar__brand">
+      <span class="navbar__icon">🌾</span>
+      <div>
+        <div class="navbar__title">Crop Disease Advisor</div>
+        <div class="navbar__subtitle">AI-Powered Diagnostics</div>
+      </div>
+    </div>
+    <div class="navbar__status">
+      <span id="api-status" class="status-dot status-dot--offline"></span>
+      <span id="api-status-text" class="navbar__status-text">Checking API...</span>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- HERO / UPLOAD SECTION                                  -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <main id="main-content">
+    <section id="hero-section" class="hero">
+      <div class="hero__badge">AI-Powered Agricultural Diagnostics</div>
+      <h1 class="hero__title">Plant Disease Detection<br /><span class="hero__title--accent">&amp; Treatment
+          Planning</span></h1>
+      <p class="hero__desc">Upload a leaf photo, configure your region and season, and receive an instant AI diagnosis
+        with a personalised treatment plan.</p>
+      <div class="hero__chips">
+        <span class="chip">🤖 EfficientNet-B4</span>
+        <span class="chip">🧠 Qwen2.5-3B QLoRA</span>
+        <span class="chip">📍 Region &amp; Season Aware</span>
+        <span class="chip">🇮🇳 Built for Indian Farmers</span>
+      </div>
+    </section>
+
+    <!-- ── Upload + Config Grid ─────────────────────────── -->
+    <section id="upload-section" class="upload-grid">
+      <!-- LEFT: Upload Zone -->
+      <div class="card upload-card">
+        <div class="card__header">
+          <span class="card__icon">📷</span>
+          <h2 class="card__title">Upload Leaf Photo</h2>
+        </div>
+        <div id="drop-zone" class="drop-zone">
+          <div id="drop-zone-content" class="drop-zone__content">
+            <div class="drop-zone__icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+            </div>
+            <p class="drop-zone__text">Drag &amp; drop your leaf image here</p>
+            <p class="drop-zone__hint">or click to browse · JPG, PNG, WebP · Max 10 MB</p>
+            <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" hidden />
+          </div>
+          <!-- Preview (hidden initially) -->
+          <div id="preview-container" class="preview-container" style="display:none;">
+            <img id="preview-image" class="preview-image" alt="Uploaded leaf preview" />
+            <button id="clear-image-btn" class="clear-btn" title="Remove image">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Configuration -->
+      <div class="card config-card">
+        <div class="card__header">
+          <span class="card__icon">⚙️</span>
+          <h2 class="card__title">Configuration</h2>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="region-select">🌍 Region</label>
+          <select id="region-select" class="form-select">
+            <option value="North India">North India</option>
+            <option value="South India">South India</option>
+            <option value="East India">East India</option>
+            <option value="West India">West India</option>
+            <option value="Central India">Central India</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="season-select">🌦 Season</label>
+          <select id="season-select" class="form-select">
+            <option value="Kharif (Monsoon)">Kharif (Monsoon)</option>
+            <option value="Rabi (Winter)">Rabi (Winter)</option>
+            <option value="Zaid (Summer)">Zaid (Summer)</option>
+          </select>
+        </div>
+
+        <!-- Severity Mode Toggle -->
+        <div class="form-group">
+          <label class="form-label">⚠ Severity Assessment</label>
+          <div class="severity-toggle">
+            <button id="severity-auto-btn" class="toggle-btn toggle-btn--active" data-mode="auto">Auto</button>
+            <button id="severity-manual-btn" class="toggle-btn" data-mode="manual">Manual</button>
+          </div>
+          <p id="severity-auto-hint" class="form-hint">System will estimate severity based on AI confidence.</p>
+
+          <!-- Manual Slider (hidden by default) -->
+          <div id="severity-manual-controls" class="severity-slider-wrap" style="display:none;">
+            <label class="form-hint">How much of the plant is affected?</label>
+            <div class="slider-container">
+              <input type="range" id="severity-slider" class="severity-slider" min="0" max="100" value="30" />
+              <div id="severity-value" class="severity-value" style="color: #22c55e;">30%</div>
+            </div>
+            <div class="severity-bar-labels">
+              <span style="color:#22c55e">Healthy</span>
+              <span style="color:#eab308">Moderate</span>
+              <span style="color:#ef4444">Severe</span>
+            </div>
+          </div>
+        </div>
+
+        <button id="analyze-btn" class="analyze-btn" disabled>
+          <span id="analyze-btn-text">🔍 Analyze Disease</span>
+          <span id="analyze-btn-loading" class="btn-spinner" style="display:none;"></span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- LOADING STATE                                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="loading-section" class="loading-section" style="display:none;">
+      <div class="loading-card card">
+        <div class="loading-spinner"></div>
+        <h2 class="loading-title">Analyzing Your Leaf...</h2>
+        <p class="loading-desc">Running EfficientNet-B4 vision model. This may take a moment.</p>
+        <div class="loading-steps">
+          <div id="step-vision" class="loading-step">
+            <span class="step-dot"></span>
+            <span>Vision model classification</span>
+          </div>
+          <div id="step-report" class="loading-step">
+            <span class="step-dot"></span>
+            <span>Compiling diagnostic report</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- RESULTS DASHBOARD                                      -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="results-section" class="results-section" style="display:none;">
+
+      <!-- Stats Row -->
+      <div id="stats-row" class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">🌱</div>
+          <div class="stat-label">Plant</div>
+          <div id="stat-plant" class="stat-value">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🦠</div>
+          <div class="stat-label">Disease</div>
+          <div id="stat-disease" class="stat-value">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-label">Confidence</div>
+          <div id="stat-confidence" class="stat-value">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-label">Severity</div>
+          <div id="stat-severity" class="stat-value">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏱</div>
+          <div class="stat-label">Urgency</div>
+          <div id="stat-urgency" class="stat-value">—</div>
+        </div>
+      </div>
+
+      <!-- Two-Column: Image + Diagnosis -->
+      <div class="results-grid">
+        <!-- LEFT: Image + Top-5 -->
+        <div class="card results-image-card">
+          <div class="card__header">
+            <span class="card__icon">📷</span>
+            <h2 class="card__title">Analyzed Leaf</h2>
+          </div>
+          <div id="result-image-wrap" class="result-image-wrap">
+            <img id="result-image" class="result-image" alt="Analyzed leaf" />
+          </div>
+          <div class="card__header" style="margin-top:20px;">
+            <span class="card__icon">📊</span>
+            <h2 class="card__title">Top-5 Predictions</h2>
+          </div>
+          <div id="top5-bars" class="top5-bars"></div>
+        </div>
+
+        <!-- RIGHT: Diagnosis + Treatments -->
+        <div class="results-right">
+          <!-- Diagnosis Card -->
+          <div class="card diagnosis-card">
+            <div class="card__header">
+              <span class="card__icon">🦠</span>
+              <h2 class="card__title">Diagnosis</h2>
+            </div>
+            <div id="diagnosis-disease" class="diagnosis-disease">—</div>
+            <div id="diagnosis-crop" class="diagnosis-crop">—</div>
+            <div id="diagnosis-description" class="diagnosis-desc"></div>
+            <div id="diagnosis-badges" class="diagnosis-badges"></div>
+          </div>
+
+          <!-- Treatment Tabs -->
+          <div class="card treatment-card">
+            <div class="tabs">
+              <div class="tabs__nav">
+                <button class="tab-btn tab-btn--active" data-tab="organic">🌿 Organic</button>
+                <button class="tab-btn" data-tab="chemical">⚗️ Chemical</button>
+                <button class="tab-btn" data-tab="preventive">🛡️ Preventive</button>
+                <button class="tab-btn" data-tab="advisory">📋 Advisory</button>
+              </div>
+              <div class="tabs__content">
+                <div id="tab-organic" class="tab-panel tab-panel--active"></div>
+                <div id="tab-chemical" class="tab-panel"></div>
+                <div id="tab-preventive" class="tab-panel"></div>
+                <div id="tab-advisory" class="tab-panel"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════ -->
+      <!-- ACTION: EXPORT REPORT                              -->
+      <!-- ═══════════════════════════════════════════════════ -->
+      <div class="report-actions" style="margin-top: 30px; text-align: center;">
+        <h2 class="section-title" style="justify-content: center; margin-bottom: 20px;"><span
+            class="section-icon">📄</span> Clinical Diagnostic Report</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px;">The AI has compiled a comprehensive
+          region-specific report with full treatment instructions.</p>
+        <button id="download-pdf-btn" class="analyze-btn"
+          style="max-width: 300px; margin: 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Download Full PDF Report
+        </button>
+      </div>
+
+      <!-- Hidden container for PDF rendering -->
+      <div style="position: absolute; left: -9999px; top: -9999px; width: 800px; overflow: visible;">
+        <div id="report-container" class="report-container card" style="background: white;">
+          <!-- Report content is injected by JS -->
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FOOTER                                                 -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <span>Crop Disease Advisor v2.0</span>
+      <span class="footer__dot">·</span>
+      <span>Shubham Haraniya &amp; Vidhan Savaliya</span>
+      <span class="footer__dot">·</span>
+      <span>AI-Powered Diagnostics</span>
+    </div>
+  </footer>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" style="display:none;"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+  <script type="module" src="/app.js"></script>
+</body>
+
+</html>

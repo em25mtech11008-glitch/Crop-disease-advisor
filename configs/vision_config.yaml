@@ -1,0 +1,47 @@
+model: efficientnet_b4
+num_classes: 38
+image_size: 224
+batch_size: 32
+epochs: 50
+learning_rate: 1.0e-3
+weight_decay: 1.0e-4
+label_smoothing: 0.1
+train_split: 0.8
+val_split: 0.1
+test_split: 0.1
+mean: [0.485, 0.456, 0.406]
+std: [0.229, 0.224, 0.225]
+dropout: 0.3
+seed: 42
+
+# Unfreezing schedule (epoch boundaries)
+unfreeze_schedule:
+  phase1_end: 15     # epochs 0–15:  classifier head only
+  phase2_end: 30     # epochs 15–30: last 2 MBConv blocks
+  # epochs 30–50: full model
+
+# Learning rates per phase
+lr_phase1: 1.0e-3
+lr_phase2: 5.0e-4
+lr_phase3: 1.0e-4
+
+# Scheduler
+scheduler: cosine_annealing_warm_restarts
+T_0: 10
+
+# Early stopping
+early_stop_patience: 10
+early_stop_metric: val_accuracy
+
+# Checkpointing
+checkpoint_dir: models/vision
+best_model_name: efficientnet_b4_best.pt
+
+# WandB
+wandb_project: crop-disease-advisor
+wandb_entity: null   # set via env var WANDB_ENTITY
+
+# Data paths
+data_root: data/processed
+raw_plantvillage: data/raw/plantvillage
+class_names_file: data/processed/class_names.json

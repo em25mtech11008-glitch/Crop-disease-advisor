@@ -1,0 +1,101 @@
+name: CI — Lint & Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  lint:
+    name: Code Style (flake8 + black)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('requirements_phase1.txt') }}
+
+      - name: Install lint tools
+        run: pip install flake8 black
+
+      - name: Run black (check mode)
+        run: black --check src/ tests/
+
+      - name: Run flake8
+        run: flake8 src/ tests/ --max-line-length=120 --extend-ignore=E203,W503
+
+  unit-tests:
+    name: Unit Tests (CPU, no GPU)
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-test-${{ hashFiles('requirements_phase1.txt') }}
+
+      - name: Install CPU-only torch + test deps
+        run: |
+          pip install torch==2.1.0+cpu torchvision==0.16.0+cpu \
+              --index-url https://download.pytorch.org/whl/cpu
+          pip install timm pillow scikit-learn numpy tqdm pyyaml \
+              fastapi uvicorn python-multipart httpx pytest pytest-cov \
+              wandb reportlab opencv-python-headless albumentations
+
+      - name: Create dummy class_names.json
+        run: |
+          mkdir -p data/processed
+          python -c "
+          import json
+          names = {str(i): f'Crop_{i}___Disease_{i}' for i in range(38)}
+          with open('data/processed/class_names.json','w') as f:
+              json.dump(names, f)
+          "
+
+      - name: Run tests (excluding LLM tests that need GPU)
+        run: |
+          pytest tests/test_preprocessing.py \
+                 tests/test_vision_model.py \
+                 tests/test_pipeline.py \
+                 tests/test_llm_advisor.py \
+                 -v --tb=short \
+                 --cov=src --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+
+  dvc-check:
+    name: DVC Pipeline Check (dry run)
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install DVC
+        run: pip install dvc
+      - name: DVC repro dry run
+        run: dvc repro --dry || echo "No dvc.yaml yet — skipping."

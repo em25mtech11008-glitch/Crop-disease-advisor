@@ -1,0 +1,24 @@
+# ─── CPU-only requirements for HuggingFace Spaces deployment ──────────────────
+# No GPU, no LLM (PHASE=1 uses DISEASE_DB curated data directly)
+
+# ─── Core (CPU builds) ────────────────────────────────────────────────────────
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# ─── Vision ───────────────────────────────────────────────────────────────────
+timm==0.9.12
+Pillow==10.2.0
+
+# ─── API ──────────────────────────────────────────────────────────────────────
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.9
+
+# ─── HuggingFace Hub (model download at startup) ──────────────────────────────
+huggingface-hub>=0.20.3
+
+# ─── Utils ────────────────────────────────────────────────────────────────────
+numpy==1.26.3
+pyyaml==6.0.1
+python-dotenv==1.0.0

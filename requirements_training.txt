@@ -1,0 +1,46 @@
+# ─── GPU Training Requirements ────────────────────────────────────────────────
+# Use this file on your training machine (local GPU / university cluster / Colab)
+# NOT used in deployment — deployment uses requirements.txt (CPU-only)
+#
+# Install with:
+#   pip install -r requirements_training.txt
+
+# ─── Core (GPU builds — CUDA 11.8) ────────────────────────────────────────────
+torch==2.2.2
+torchvision==0.17.2
+--extra-index-url https://download.pytorch.org/whl/cu118
+
+# ─── Vision Model ─────────────────────────────────────────────────────────────
+timm==0.9.12
+Pillow==10.2.0
+numpy==1.26.3
+scikit-learn>=1.4.0
+matplotlib>=3.8.0
+tqdm>=4.66.0
+
+# ─── LLM Fine-tuning (QLoRA) ──────────────────────────────────────────────────
+transformers>=4.40.0
+peft>=0.10.0
+trl>=0.8.6
+bitsandbytes>=0.43.0
+accelerate>=0.27.0
+datasets>=2.18.0
+
+# ─── Experiment Tracking ──────────────────────────────────────────────────────
+wandb>=0.16.0
+
+# ─── Chatbot / Streamlit UI ───────────────────────────────────────────────────
+streamlit>=1.32.0
+gradio>=4.20.0
+
+# ─── API (needed if running chatbot alongside FastAPI) ────────────────────────
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.9
+
+# ─── HuggingFace Hub (upload / download models) ───────────────────────────────
+huggingface-hub>=0.20.3
+
+# ─── Utils ────────────────────────────────────────────────────────────────────
+pyyaml==6.0.1
+python-dotenv==1.0.0
